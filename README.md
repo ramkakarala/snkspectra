@@ -1,10 +1,10 @@
 # snkspectra
 
-A vibe-coded Python library for working with permutations and their representations in group theory.  Even this README is written by AI.
+A vibe-coded Python library for working with permutations and their representations in group theory.  
 
 ## Overview
 
-snkspectra provides a clean implementation of the symmetric group Sₙ — the group of all permutations on n elements. It supports multiple standard notations, algebraic operations, cycle decomposition, sign computation, matrix representations, and the full symmetric group as a first-class object.
+Python code for noodling around with Sn mod Sk, or "Snk" for short. Snk models k choices out of n, e.g., the top 5 NBA players of all time. The library supports multiple standard notations, algebraic operations, cycle decomposition, sign computation, matrix representations, and the full symmetric group as a first-class object.
 
 ## Features
 
@@ -158,3 +158,10 @@ This library implements the **symmetric group Sₙ**, the set of all bijections 
 - **Conjugacy classes**: two permutations are conjugate iff they have the same cycle type
 - **Permutation matrices**: n×n binary matrices with exactly one 1 per row and column; M⁻¹ = Mᵀ
 - **Group homomorphism**: the map σ ↦ M(σ) satisfies M(σ · τ) = M(σ) @ M(τ)
+
+##References
+Thanks to these researchers for making their codes available
+* Horace Pan, https://github.com/horacepan/snpy
+* Risi Kondor, https://github.com/risi-kondor/Snob2
+* Risi Kondor, https://people.cs.uchicago.edu/~risi/SnOB/index.html
+
