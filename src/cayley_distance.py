@@ -29,6 +29,23 @@ def cayley_distance(sigma: Permutation, tau: Permutation) -> int:
     return pi.n - n_cycles
 
 
+def hamming_distance(sigma: Permutation, tau: Permutation) -> int:
+    """
+    Return the Hamming distance between sigma and tau: the number of positions
+    where they disagree.
+
+        d_H(sigma, tau) = #{j : sigma(j) != tau(j)}
+
+    This equals (1/2) * ||M(sigma) - M(tau)||_F^2, where M(·) is the
+    permutation matrix representation.
+    """
+    if sigma.n != tau.n:
+        raise ValueError(
+            f"Permutations must have the same degree ({sigma.n} vs {tau.n})"
+        )
+    return sum(1 for j in range(1, sigma.n + 1) if sigma(j) != tau(j))
+
+
 # ----------------------------------------------------------------------
 # Demo
 # ----------------------------------------------------------------------
@@ -55,3 +72,11 @@ if __name__ == "__main__":
     dsr = cayley_distance(sigma, rho)
     print(f"\nTriangle inequality d(s,t)+d(t,r) >= d(s,r): "
           f"{dst} + {dtr} >= {dsr} → {dst + dtr >= dsr}")
+
+    # Hamming distance demo
+    print(f"\n--- Hamming distance ---")
+    print(f"d_H(e,     e)     = {hamming_distance(e, e)}")
+    print(f"d_H(e,     sigma) = {hamming_distance(e, sigma)}")
+    print(f"d_H(e,     tau)   = {hamming_distance(e, tau)}")
+    print(f"d_H(sigma, tau)   = {hamming_distance(sigma, tau)}")
+    print(f"d_H(sigma, sigma) = {hamming_distance(sigma, sigma)}")

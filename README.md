@@ -1,6 +1,6 @@
 # snkspectra
 
-A vibe-coded Python library for working with permutations and their representations in group theory.  
+A WORK IN PROGRESS, vibe-coded, Python library for working with permutations and their representations in group theory.  
 
 ## Overview
 
@@ -16,6 +16,11 @@ Python code for noodling around with Sn mod Sk, or "Snk" for short. Snk models k
 - **Symmetric group**: `SymmetricGroup(n)` enumerates all n! elements with group-theoretic queries
 - **Matrix representation**: converts permutations to binary permutation matrices
 - **Homomorphism verification**: M(σ · τ) = M(σ) @ M(τ)
+- **Trivial representation**: the 1×1 identity representation
+- **Sign representation**: the 1×1 representation mapping even/odd permutations to ±1
+- **Standard representation**: the irreducible (n−1)-dimensional subrepresentation
+- **Characters**: trace of any representation matrix; satisfies χ_std = χ_perm − χ_trivial
+- **Distance functions**: Cayley distance (minimum transpositions) and Hamming distance (disagreeing positions)
 
 ## Installation
 
@@ -102,17 +107,45 @@ S4.conjugacy_class(tau)   # all 6 transpositions in S_4
 S4.cycle_index()  # {(1,1,1,1): 1, (1,1,2): 6, (1,3): 8, (2,2): 3, (4,): 6}
 ```
 
-### Matrix Representation
+### Representations
 
 ```python
-from src import perm_mat_rep
-import numpy as np
+from src import perm_mat_rep, trivial_rep, sign_rep, standard_rep, character
 
-M_sigma = perm_mat_rep(sigma)
-M_tau   = perm_mat_rep(tau)
+sigma = Permutation([2, 3, 1, 4, 5])   # (1 2 3)
+tau   = Permutation([2, 1, 3, 4, 5])   # (1 2)
 
-np.array_equal(perm_mat_rep(sigma * tau), M_sigma @ M_tau)   # True  (homomorphism)
-np.array_equal(M_sigma @ M_sigma.T, np.eye(5))               # True  (orthogonal)
+# Permutation matrix representation (n×n)
+M = perm_mat_rep(sigma)
+np.array_equal(perm_mat_rep(sigma * tau), perm_mat_rep(sigma) @ perm_mat_rep(tau))  # True
+
+# Trivial representation (1×1, always [[1]])
+trivial_rep(sigma)   # array([[1]])
+
+# Sign representation (1×1, [[+1]] or [[-1]])
+sign_rep(sigma)      # array([[1]])   — (1 2 3) is even
+sign_rep(tau)        # array([[-1]])  — (1 2) is odd
+
+# Standard representation ((n-1)×(n-1), irreducible)
+standard_rep(sigma)  # 4×4 orthogonal matrix
+
+# Characters (trace of the representation matrix)
+character(sigma, trivial_rep)   # 1
+character(sigma, sign_rep)      # 1  (even permutation)
+character(sigma, perm_mat_rep)  # 2  (number of fixed points)
+character(sigma, standard_rep)  # 1  (fixed points − 1)
+```
+
+### Distance Functions
+
+```python
+from src.cayley_distance import cayley_distance, hamming_distance
+
+sigma = Permutation([2, 3, 1, 4, 5])
+tau   = Permutation([2, 1, 3, 4, 5])
+
+cayley_distance(sigma, tau)   # minimum transpositions to transform sigma into tau
+hamming_distance(sigma, tau)  # number of positions where sigma and tau disagree
 ```
 
 ## Project Structure
@@ -120,13 +153,14 @@ np.array_equal(M_sigma @ M_sigma.T, np.eye(5))               # True  (orthogonal
 ```
 snkspectra/
 ├── src/
-│   ├── __init__.py                      # Exports Permutation, SymmetricGroup, perm_mat_rep
-│   ├── permutations.py                  # Permutation class
-│   ├── symmetric_group.py               # SymmetricGroup class
-│   ├── permutation_matrix_rep.py        # Matrix representation
-│   ├── test_permutations.py             # Permutation tests
-│   ├── test_symmetric_group.py          # SymmetricGroup tests
-│   └── test_permutation_matrix_rep.py   # Matrix representation tests
+│   ├── __init__.py                  # Exports Permutation, SymmetricGroup, all representations
+│   ├── permutations.py              # Permutation class
+│   ├── symmetric_group.py           # SymmetricGroup class
+│   ├── representations.py           # perm_mat_rep, trivial_rep, sign_rep, standard_rep, character
+│   ├── cayley_distance.py           # cayley_distance, hamming_distance
+│   ├── test_permutations.py         # Permutation tests
+│   ├── test_symmetric_group.py      # SymmetricGroup tests
+│   └── test_representations.py      # Representation and distance tests
 ├── LICENSE
 └── README.md
 ```
@@ -158,9 +192,15 @@ This library implements the **symmetric group Sₙ**, the set of all bijections 
 - **Conjugacy classes**: two permutations are conjugate iff they have the same cycle type
 - **Permutation matrices**: n×n binary matrices with exactly one 1 per row and column; M⁻¹ = Mᵀ
 - **Group homomorphism**: the map σ ↦ M(σ) satisfies M(σ · τ) = M(σ) @ M(τ)
+- **Representations**: group homomorphisms ρ: Sₙ → GL(V); the trivial, sign, and standard representations are all irreducible
+- **Characters**: χ_ρ(σ) = tr(ρ(σ)); class functions that determine the representation up to isomorphism
+- **Character orthogonality**: ⟨χ_ρ, χ_ρ'⟩ = (1/n!) Σ_σ χ_ρ(σ)χ_ρ'(σ) = δ_{ρ,ρ'} for irreducible ρ, ρ'
+- **Standard representation**: the (n−1)-dimensional complement of the trivial subspace in the permutation representation; satisfies χ_std = χ_perm − χ_trivial
+- **Cayley distance**: d(σ, τ) = n − c(σ⁻¹τ), where c(π) is the number of cycles of π
+- **Hamming distance**: d_H(σ, τ) = #{j : σ(j) ≠ τ(j)}; equals ½‖M(σ) − M(τ)‖²_F
 
-##References
-Thanks to these researchers for making their codes available
+## References
+
 * Horace Pan, https://github.com/horacepan/snpy
 * Risi Kondor, https://github.com/risi-kondor/Snob2
 * Risi Kondor, https://people.cs.uchicago.edu/~risi/SnOB/index.html
