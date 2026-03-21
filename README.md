@@ -291,6 +291,7 @@ This library implements the **symmetric group Sₙ**, the set of all bijections 
 ## References
 
 * Horace Pan, https://github.com/horacepan/snpy
+* Horace Pan, https://github.com/horacepan/SnFFT
 * Risi Kondor, https://github.com/risi-kondor/Snob2
 * Risi Kondor, https://people.cs.uchicago.edu/~risi/SnOB/index.html
 * Clausen, "Fast generalized Fourier transforms" (1989)
