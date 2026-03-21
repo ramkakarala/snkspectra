@@ -1,5 +1,5 @@
 """
-Vibe coded (by  Claude) 15 March 2026
+Vibe coded (Claude)
 Permutation class supporting one-line and two-line notation,
 multiplication (composition), and inversion.
 

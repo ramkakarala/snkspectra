@@ -1,5 +1,5 @@
 """
-Vibe coded (Claude )
+Vibe coded (Claude)
 Irreducible representations (irreps) of the symmetric group S_n.
 
 The irreps of S_n are indexed by partitions of n (Young diagrams).

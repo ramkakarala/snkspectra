@@ -1,5 +1,5 @@
 """
-vibe coded (Claude) 15 March 2026
+Vibe coded (Claude)
     Convert a permutation to its corresponding binary permutation matrix.
 
     The permutation is 1-indexed: perm[i] = j means element i+1 maps to position j.
