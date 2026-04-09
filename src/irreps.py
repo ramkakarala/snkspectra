@@ -209,7 +209,8 @@ def irrep(partition: tuple[int, ...]):
             raise ValueError(f"Permutation has degree {perm.n}, expected {n}")
         M = np.eye(dim)
         for i in _to_adjacent_transpositions(perm):
-            M = M @ _s_matrix(i)
+            S = _s_matrix(i)
+            M = M @ S
         return M
 
     return rep
@@ -222,7 +223,7 @@ def irrep(partition: tuple[int, ...]):
 if __name__ == "__main__":
     from symmetric_group import SymmetricGroup
 
-    for n in range(2, 6):
+    for n in range(2, 7):
         Sn = SymmetricGroup(n)
         parts = partitions_of(n)
         print(f"\n=== S_{n}  (order {Sn.order()}) ===")
@@ -244,4 +245,10 @@ if __name__ == "__main__":
             # Character at identity = dimension
             chi_e = round(np.trace(rho(Sn.identity())).real)
 
+            # Average over all group elements
+            avg = sum(rho(g) for g in elements) / len(elements)
+
             print(f"  λ={lam}  dim={dim}  χ(e)={chi_e}  homomorphism={'✓' if hom_ok else '✗'}")
+            if not np.allclose(avg, 0):
+                print(f"    average over group:")
+                print(np.array2string(avg, precision=4, suppress_small=True, prefix="    "))
