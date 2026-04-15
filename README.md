@@ -28,6 +28,10 @@ Python code for noodling around with Sn mod Sk, or "Snk" for short. Snk models k
 - **Inverse DFT**: `sn_idft` recovers f from its Fourier coefficients
 - **Plancherel identity**: `plancherel_norm_sq` verifies Σ|f|² = (1/n!) Σ d_λ ‖f̂(λ)‖²_F
 - **Convolution theorem**: `sn_convolve` computes group convolution via pointwise matrix product of transforms
+- **Coset projection matrices**: `snk_projection` computes the orthogonal projection P_λ onto the S_{n-k}-fixed subspace of each irrep
+- **Specht module irreps**: `irrep_specht` constructs irreps via Gram-Schmidt orthogonalization of polytabloids; equivalent to Young's orthogonal form
+- **DFT-basis representation**: `irrep_dft` constructs the n-dimensional unitary representation ρ(σ) = F_n · P_σ · F_n†
+- **Sign-normalized irreps**: `irrep_sign` builds sign-pattern variants of Young's orthogonal form (exploratory/non-homomorphic)
 
 ## Installation
 
@@ -208,6 +212,60 @@ f_full = from_coset_function(f_tilde, n, k)   # {Permutation: value}
 f_tilde2 = to_coset_function(f_full, n, k)    # back to k-tuple dict
 ```
 
+### Coset Projection Matrices
+
+```python
+from src.snk_projection import snk_projection, projection_summary, apply_projection
+
+# Projection matrices P_λ onto the S_{n-k}-fixed subspace of each irrep V_λ
+# P_λ = (1/|S_{n-k}|) Σ_{τ ∈ S_{n-k}} ρ_λ(τ)
+projections = snk_projection(5, 2)   # {partition λ ⊢ 5: d_λ × d_λ matrix}
+
+# Summary: projection + rank + dim for each λ
+summary = projection_summary(5, 2)
+# summary[λ] = {'P': matrix, 'rank': int, 'dim': int}
+# rank = dim of S_{n-k}-fixed subspace; Σ d_λ · rank(P_λ) = n!/(n-k)!
+
+# Project existing DFT coefficients onto the invariant subspace
+f_hat_proj = apply_projection(f_hat, 5, 2)   # {λ: f̂(λ) · P_λ}
+```
+
+### Specht Module Irreps
+
+```python
+from src.irreps_specht import irrep_specht, specht_basis
+
+# Irrep via Gram-Schmidt orthogonalization of Specht module polytabloids
+# Equivalent to Young's orthogonal form (same characters, orthogonal change of basis)
+rho = irrep_specht((3, 2))          # returns Permutation → np.ndarray
+sigma = Permutation([2, 3, 1, 4, 5])
+rho(sigma)                          # 5×5 orthogonal matrix
+
+# Inspect the Specht basis (orthonormal rows in the tabloid inner product)
+B, tabloids, tab_index = specht_basis((3, 2))
+# B.shape = (dim, num_tabloids);  B @ B.T = I_dim
+```
+
+### DFT-Basis Representation
+
+```python
+from src.irreps_dft import irrep_dft, dft_matrix, perm_matrix
+
+# n-dimensional unitary representation: ρ(σ) = F_n · P_σ · F_n†
+rho = irrep_dft(5)                  # returns Permutation → np.ndarray (5×5 complex)
+sigma = Permutation([2, 3, 1, 4, 5])
+rho(sigma)                          # 5×5 unitary matrix
+
+# Cyclic shift diagonalizes to DFT eigenvalues: ρ(c) = diag(ω^0, ω^{-1}, …, ω^{-(n-1)})
+# Access precomputed s_i matrices and the DFT matrix
+rho._dft_s_matrix(1)    # DFT-basis matrix for s_1 = (1 2)
+rho.F                   # normalized n×n DFT matrix F_n
+
+# Low-level helpers
+F = dft_matrix(5)       # 5×5 DFT matrix (unitary)
+P = perm_matrix(sigma)  # 5×5 permutation matrix
+```
+
 ### Distance Functions
 
 ```python
@@ -231,14 +289,20 @@ snkspectra/
 │   ├── representations.py           # perm_mat_rep, trivial_rep, sign_rep, standard_rep, character
 │   ├── cayley_distance.py           # cayley_distance, hamming_distance
 │   ├── irreps.py                    # irrep(), partitions_of() — all irreps via Young's orthogonal form
+│   ├── irreps_specht.py             # irrep_specht() — irreps via Gram-Schmidt on Specht module
+│   ├── irreps_dft.py                # irrep_dft() — DFT-basis unitary representation ρ(σ)=F·P_σ·F†
+│   ├── irreps_sign.py               # irrep_sign() — sign-normalized variant of Young's orthogonal form
 │   ├── fourier.py                   # sn_dft, sn_idft, plancherel_norm_sq, sn_convolve
 │   ├── fft.py                       # sn_fft — Clausen's O(n² · n!) FFT
 │   ├── coset_fft.py                 # sn_mod_sk_fft — S_n/S_{n-k} coset FFT
+│   ├── snk_projection.py            # snk_projection, projection_summary, apply_projection
 │   ├── demo_sn_irreps.py            # Demo: irreps of a random permutation
+│   ├── print_s_matrices.py          # Demo: print S matrices for a given partition
 │   ├── test_permutations.py         # Permutation tests
 │   ├── test_symmetric_group.py      # SymmetricGroup tests
 │   ├── test_representations.py      # Representation and distance tests
 │   ├── test_irreps.py               # Irrep tests (dimension sum rule, character orthogonality)
+│   ├── test_irreps_specht.py        # Specht irrep tests (orthogonality, equivalence with YOF)
 │   ├── test_fourier.py              # DFT tests (Plancherel, inversion, convolution, shift)
 │   ├── test_fft.py                  # FFT tests (agreement with DFT + algebraic properties)
 │   └── test_coset_fft.py            # Coset FFT tests
@@ -287,6 +351,11 @@ This library implements the **symmetric group Sₙ**, the set of all bijections 
 - **Coset FFT**: right-S_{n-k}-invariant functions depend only on (σ(n-k+1),…,σ(n)); FFT runs in O(n!/(n-k)!) domain sweeps using k levels of Clausen decomposition
 - **Cayley distance**: d(σ, τ) = n − c(σ⁻¹τ), where c(π) is the number of cycles of π
 - **Hamming distance**: d_H(σ, τ) = #{j : σ(j) ≠ τ(j)}; equals ½‖M(σ) − M(τ)‖²_F
+- **Permutation module M^λ**: basis = tabloids of shape λ (row-unordered fillings); dimension = n! / (λ₁! · λ₂! · … · λ_k!)
+- **Polytabloid**: e_T = Σ_{π ∈ C_T} sgn(π) · {π·T}, where C_T is the column stabilizer of T
+- **Specht module S^λ**: submodule of M^λ spanned by polytabloids {e_T : T standard}; Gram-Schmidt yields an orthonormal basis equivalent to Young's orthogonal form
+- **Projection onto S_{n-k}-fixed subspace**: P_λ = (1/|S_{n-k}|) Σ_{τ ∈ S_{n-k}} ρ_λ(τ); orthogonal projection with rank equal to multiplicity of trivial S_{n-k}-rep in ρ_λ|_{S_{n-k}}; satisfies Σ_λ d_λ · rank(P_λ) = n!/(n-k)!
+- **DFT-basis representation**: ρ(σ) = F_n · P_σ · F_n†; unitary n-dimensional representation where the cyclic shift diagonalizes to diag(ω⁰, ω⁻¹, …, ω^{-(n-1)}); decomposes as trivial ⊕ standard
 
 ## References
 
