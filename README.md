@@ -32,6 +32,7 @@ Python code for noodling around with Sn mod Sk, or "Snk" for short. Snk models k
 - **Specht module irreps**: `irrep_specht` constructs irreps via Gram-Schmidt orthogonalization of polytabloids; equivalent to Young's orthogonal form
 - **DFT-basis representation**: `irrep_dft` constructs the n-dimensional unitary representation ρ(σ) = F_n · P_σ · F_n†
 - **Sign-normalized irreps**: `irrep_sign` builds sign-pattern variants of Young's orthogonal form (exploratory/non-homomorphic)
+- **Character table**: `character_table(n)` returns the full character table of S_n as an integer NumPy matrix via the Murnaghan-Nakayama rule
 
 ## Installation
 
@@ -266,6 +267,25 @@ F = dft_matrix(5)       # 5×5 DFT matrix (unitary)
 P = perm_matrix(sigma)  # 5×5 permutation matrix
 ```
 
+### Character Table (Murnaghan-Nakayama Rule)
+
+```python
+from src.character_table_Sn import character_table
+
+# Returns an integer NumPy matrix for S_n
+# Rows = irreps, columns = conjugacy classes (both indexed by partitions of n
+# in decreasing lex order, with columns reversed so identity class comes first)
+X = character_table(4)
+# array([[ 1,  1,  1,  1,  1],
+#        [ 3,  1, -1,  0, -1],
+#        [ 2,  0,  2, -1,  0],
+#        [ 3, -1, -1,  0,  1],
+#        [ 1, -1,  1,  1, -1]])
+
+# Column orthogonality: X.T @ X is diagonal with centralizer orders on the diagonal
+D = X.T @ X   # diag = [24, 4, 8, 3, 4] for S_4 (centralizer |C(μ)| per class)
+```
+
 ### Distance Functions
 
 ```python
@@ -296,6 +316,7 @@ snkspectra/
 │   ├── fft.py                       # sn_fft — Clausen's O(n² · n!) FFT
 │   ├── coset_fft.py                 # sn_mod_sk_fft — S_n/S_{n-k} coset FFT
 │   ├── snk_projection.py            # snk_projection, projection_summary, apply_projection
+│   ├── character_table_Sn.py        # character_table(n) — full character table as integer NumPy matrix
 │   ├── demo_sn_irreps.py            # Demo: irreps of a random permutation
 │   ├── print_s_matrices.py          # Demo: print S matrices for a given partition
 │   ├── test_permutations.py         # Permutation tests
@@ -355,6 +376,8 @@ This library implements the **symmetric group Sₙ**, the set of all bijections 
 - **Polytabloid**: e_T = Σ_{π ∈ C_T} sgn(π) · {π·T}, where C_T is the column stabilizer of T
 - **Specht module S^λ**: submodule of M^λ spanned by polytabloids {e_T : T standard}; Gram-Schmidt yields an orthonormal basis equivalent to Young's orthogonal form
 - **Projection onto S_{n-k}-fixed subspace**: P_λ = (1/|S_{n-k}|) Σ_{τ ∈ S_{n-k}} ρ_λ(τ); orthogonal projection with rank equal to multiplicity of trivial S_{n-k}-rep in ρ_λ|_{S_{n-k}}; satisfies Σ_λ d_λ · rank(P_λ) = n!/(n-k)!
+- **Murnaghan-Nakayama rule**: χ^λ(μ) = Σ (−1)^{height(S)} χ^{λ∖S}(μ′), summing over border strips S of size μ₁; a border strip is a connected skew shape with no 2×2 block, and height = rows spanned − 1
+- **Column orthogonality**: Σ_λ χ^λ(μ) χ^λ(ν) = |C(μ)| δ_{μν}, i.e. X^T X = diag of centralizer orders
 - **DFT-basis representation**: ρ(σ) = F_n · P_σ · F_n†; unitary n-dimensional representation where the cyclic shift diagonalizes to diag(ω⁰, ω⁻¹, …, ω^{-(n-1)}); decomposes as trivial ⊕ standard
 
 ## References
